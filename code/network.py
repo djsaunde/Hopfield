@@ -24,18 +24,27 @@ class HopfieldNetwork:
         state (numpy.ndarray): current network state. matrix of shape (nrOfNeurons, nrOfNeurons)
     """
 
-    def __init__(self, nr_neurons, connectivity='full'):
+    def __init__(self, nr_neurons, connectivity='full', percent_connect='1.0'):
         """
         Constructor for the Hopfield network.
 
         Args:
             nr_neurons (int): Number of neurons. Use a square number to get the
             visualizations properly.
+            connectivity: The pattern of connectivity of the undirected edges of the model. This
+            could be "full", corresponding to every neuron is connected to every other, "lattice",
+            corresponding to connectivity between neighboring neurons, and "random", in which we
+            start with lattice connectivity and add edges randomly according to the "percent_connect"
+            parameter.
+            percent_connect: The probability with which we are to add each edge (i, j) to the lattice-
+            -only network connectivity.
         """
         # math.sqrt(nr_neurons)
         self.nrOfNeurons = nr_neurons
         # connectivity pattern
         self.connectivity = connectivity
+        # percent of connected edges (out of the possible choices, sans lattice connections and self-connections)
+        self.percent_connect = percent_connect
         # initialize with random state
         self.state = 2 * np.random.randint(0, 2, self.nrOfNeurons) - 1
         # initialize random weights
@@ -93,6 +102,18 @@ class HopfieldNetwork:
         """
         self._update_method = update_function
         
+        
+    def is_lattice_connection(self, i, k):
+        """
+        Boolean method which checks if two indices in a network correspond to neighboring neurons in a lattice.
+        
+        Args:
+            i: First neuron's index.
+            k: Second neuron's index.
+        """
+        sqrt = math.sqrt(self.nrOfNeurons)
+        return i + 1 == k and k % sqrt != 0 or i - 1 == k and i % sqrt != 0 or i + sqrt == k or i - sqrt == k
+        
 
     def store_patterns(self, pattern_list):
         """
@@ -117,15 +138,28 @@ class HopfieldNetwork:
                 for k in range(self.nrOfNeurons):
                     self.weights[i, k] += p_flat[i] * p_flat[k]
         
-        if self.connectivity == 'lattice':            
-            sqrt = math.sqrt(self.nrOfNeurons)
+        if self.connectivity == 'random':
             for i in range(self.nrOfNeurons):
                 for k in range(self.nrOfNeurons):
-                    if not (i + 1 == k and k % sqrt != 0 or i - 1 == k and i % sqrt != 0 or i + sqrt == k or i - sqrt == k):
-                        self.weights[i, k] = 0
+                    # if the (i, k) pair of neurons aren't part of the lattice connectivity
+                    if not self.is_lattice_connection(i, k):
+                        # and if a random coin flip is greater than 1.0 - percent_connect
+                        if random.random < 1.0 - self.percent_connect:
+                            # set the edge weight to 0 (never updates; corresponds to no edge)
+                            self.weights[i, k] = 0.0
+                    
+        elif self.connectivity == 'lattice':            
+            for i in range(self.nrOfNeurons):
+                for k in range(self.nrOfNeurons):
+                    # if the (i, k) pair of neurons aren't part of the lattice connectivity
+                    if not self.is_lattice_connection(i, k):
+                        # set the edge weight to 0 (never updates; corresponds to no edge)
+                        self.weights[i, k] = 0.0
                 
+        # normalize the weights by the number of neurons in the network
         self.weights /= self.nrOfNeurons
-        # no self connections:
+        
+        # no self connections
         np.fill_diagonal(self.weights, 0)
         
 

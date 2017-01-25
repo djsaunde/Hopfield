@@ -1,25 +1,8 @@
 """
 Functions to create 2D patterns.
-Note, in the hopfield model, we define patterns as vectors. To make
+Note: In the Hopfield model, we define patterns as vectors. To make
 the exercise more visual, we use 2D patterns (N by N ndarrays).
 """
-
-# This file is part of the exercise code repository accompanying
-# the book: Neuronal Dynamics (see http://neuronaldynamics.epfl.ch)
-# located at http://github.com/EPFL-LCN/neuronaldynamics-exercises.
-
-# This free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License 2.0 as published by the
-# Free Software Foundation. You should have received a copy of the
-# GNU General Public License along with the repository. If not,
-# see http://www.gnu.org/licenses/.
-
-# Should you reuse and publish the code for your own purposes,
-# please cite the book or point to the webpage http://neuronaldynamics.epfl.ch.
-
-# Wulfram Gerstner, Werner M. Kistler, Richard Naud, and Liam Paninski.
-# Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition.
-# Cambridge University Press, 2014.
 
 import numpy as np
 from scipy import linalg
@@ -145,11 +128,9 @@ class PatternFactory:
         reshapes all patterns in pattern_list to have shape = (self.pattern_length, self.pattern_width)
 
         Args:
-            self:
-            pattern_list:
-
-        Returns:
-
+            self: PatternFactory object
+            pattern_list: the list of patterns to reshape into 2D patterns of shape (self.pattern_length,
+            self.pattern_width)
         """
         new_shape = (self.pattern_length, self.pattern_width)
         return reshape_patterns(pattern_list, new_shape)
@@ -160,8 +141,8 @@ def reshape_patterns(pattern_list, shape):
     reshapes each pattern in pattern_list to the given shape
 
     Args:
-        pattern_list:
-        shape:
+        pattern_list: List of patterns to reshape.
+        shape: The new shape of each pattern.
 
     Returns:
 
@@ -172,18 +153,17 @@ def reshape_patterns(pattern_list, shape):
 
 def get_pattern_diff(pattern1, pattern2, diff_code=0):
     """
-    Creates a new pattern of same size as the two patterns.
-    the diff pattern has the values pattern1 = pattern2 where the two patterns have
-    the same value. Locations that differ between the two patterns are set to
-    diff_code (default = 0)
+    Creates a new pattern of same size as the two patterns. The diff pattern has the values 
+    pattern1 = pattern2 where the two patterns have the same value. Locations that differ 
+    between the two patterns are set to diff_code (default = 0)
 
     Args:
-        pattern1:
-        pattern2:
-        diff_code: the values of the new pattern, at locations that differ between
+        pattern1: The first pattern to diff.
+        pattern2: The second pattern to diff.
+        diff_code: The values of the new pattern at locations that differ between
         the two patterns are set to diff_code.
     Returns:
-        the diff pattern.
+        the diff'd pattern.
     """
     if pattern1.shape != pattern2.shape:
         raise ValueError("patterns are not of equal shape")
@@ -194,13 +174,12 @@ def get_pattern_diff(pattern1, pattern2, diff_code=0):
 
 def flip_n(template, nr_of_flips):
     """
-    makes a copy of the template pattern and flips
-    exactly n randomly selected states.
+    Makes a copy of the template pattern and flips exactly n randomly selected states.
     Args:
-        template:
-        nr_of_flips:
+        template: The pattern to copy and randomly flip states of.
+        nr_of_flips: The number of state flips to perform.
     Returns:
-        a new pattern
+        A new pattern with n randomly chosen (without replacement) states flipped.
     """
     n = np.prod(template.shape)
     # pick nrOfMutations indices (without replacement)
@@ -212,22 +191,22 @@ def flip_n(template, nr_of_flips):
 
 def get_noisy_copy(template, noise_level):
     """
-    Creates a copy of the template pattern and reassigns N pixels. N is determined
-    by the noise_level
-    Note: reassigning a random value is not the same as flipping the state. This
-    function reassigns a random value.
+    Creates a copy of the template pattern and reassigns N pixels. N is determined by the noise_level.
+    Note: Reassigning a random value is not the same as flipping the state. This function reassigns
+    a random value.
 
     Args:
-        template:
-        noise_level: a value in [0,1]. for 0, this returns a copy of the template.
-        for 1, a random pattern of the same size as template is returned.
+        template: The pattern to copy and randomly reassign states of.
+        noise_level: A value in [0, 1]. For 0, this returns a copy of the template. For 1, a random
+        pattern of the same size as template is returned.
     Returns:
-
+        A new pattern with N (determined by noise level) randomly chosen (without replacement) states
+        randomly reassigned.
     """
     if noise_level == 0:
         return template.copy()
     if noise_level < 0 or noise_level > 1:
-        raise ValueError("noise level is not in [0,1] but {}0".format(noise_level))
+        raise ValueError("noise level is not in [0,1] but {} 0".format(noise_level))
     linear_template = template.copy().flatten()
     n = np.prod(template.shape)
     nr_mutations = int(round(n * noise_level))
@@ -240,7 +219,7 @@ def get_noisy_copy(template, noise_level):
 
 def compute_overlap(pattern1, pattern2):
     """
-    compute overlap
+    Compute overlap between two patterns, defined by 
 
     Args:
         pattern1:
