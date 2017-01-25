@@ -1,3 +1,5 @@
 # Hopfield
 
-Experimenting with the `neurodynex.network.hopfield_network` class and associated classes and methods.
+Experimenting with modules `network`, `pattern_tools`, and `plot_tools` from `neurodynex`.
+I'm adding network connectivity patterns, update rules (stochastic vs. deterministic,
+synchronous vs. asynchronous), fixing typos and adding documentation.
