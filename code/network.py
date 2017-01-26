@@ -137,14 +137,14 @@ class HopfieldNetwork:
             for i in range(self.nrOfNeurons):
                 for k in range(self.nrOfNeurons):
                     self.weights[i, k] += p_flat[i] * p_flat[k]
-        
+                
         if self.connectivity == 'random':
             for i in range(self.nrOfNeurons):
                 for k in range(self.nrOfNeurons):
                     # if the (i, k) pair of neurons aren't part of the lattice connectivity
                     if not self.is_lattice_connection(i, k):
                         # and if a random coin flip is greater than 1.0 - percent_connect
-                        if random.random < 1.0 - self.percent_connect:
+                        if random.random() < 1.0 - self.percent_connect:
                             # set the edge weight to 0 (never updates; corresponds to no edge)
                             self.weights[i, k] = 0.0
                     

@@ -90,3 +90,6 @@ ENV/
 
 # gedit backup files
 *~
+
+# data directory
+data/
