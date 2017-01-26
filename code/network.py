@@ -115,29 +115,32 @@ class HopfieldNetwork:
         return i + 1 == k and k % sqrt != 0 or i - 1 == k and i % sqrt != 0 or i + sqrt == k or i - sqrt == k
         
 
-    def store_patterns(self, pattern_list):
+    def store_patterns_hebbian(self, pattern_list):
         """
-        Learns the patterns by setting the network weights. The patterns
-        themselves are not stored, only the weights are updated!
-        self connections are set to 0.
+        Learns the patterns by setting the network weights via the Hebbian learning rule. The patterns
+        themselves are not stored, only the weights are updated! Self connections are set to 0.
 
         Args:
-            pattern_list: a nonempty list of patterns.
+            pattern_list: A nonempty list of patterns.
         """
+        # check that all patterns have the same dimensionality as the network
         all_same_size_as_net = all(len(p.flatten()) == self.nrOfNeurons for p in pattern_list)
         if not all_same_size_as_net:
             errMsg = "Not all patterns in pattern_list have exactly the same number of states " \
                      "as this network has neurons n = {0}.".format(self.nrOfNeurons)
             raise ValueError(errMsg)
-        
+            
+        # first initialize all weights to zero
         self.weights = np.zeros((self.nrOfNeurons, self.nrOfNeurons))
-        # textbook formula to compute the weights:
+        
+        # Hebbian rule formula to compute the weights
         for p in pattern_list:
             p_flat = p.flatten()
             for i in range(self.nrOfNeurons):
                 for k in range(self.nrOfNeurons):
                     self.weights[i, k] += p_flat[i] * p_flat[k]
-                
+                    
+        # if the connectivity is "random", randomly choose (by chosen percentage) edges to zero out
         if self.connectivity == 'random':
             for i in range(self.nrOfNeurons):
                 for k in range(self.nrOfNeurons):
@@ -147,7 +150,8 @@ class HopfieldNetwork:
                         if random.random() < 1.0 - self.percent_connect:
                             # set the edge weight to 0 (never updates; corresponds to no edge)
                             self.weights[i, k] = 0.0
-                    
+        
+        # if the connectivity is "lattice", zero out all but lattice edges
         elif self.connectivity == 'lattice':            
             for i in range(self.nrOfNeurons):
                 for k in range(self.nrOfNeurons):
@@ -158,6 +162,60 @@ class HopfieldNetwork:
                 
         # normalize the weights by the number of neurons in the network
         self.weights /= self.nrOfNeurons
+        
+        # no self connections
+        np.fill_diagonal(self.weights, 0)
+        
+        
+    def store_patterns_storkey(self, pattern_list):
+        """
+        Learns the patterns by setting the network weights via the Storkey learning rule. The patterns
+        themselves are not stored, only the weights are updated! Self connections are set to 0.
+
+        Args:
+            pattern_list: A nonempty list of patterns.
+        """
+        # check that all patterns have the same dimensionality as the network
+        all_same_size_as_net = all(len(p.flatten()) == self.nrOfNeurons for p in pattern_list)
+        if not all_same_size_as_net:
+            errMsg = "Not all patterns in pattern_list have exactly the same number of states " \
+                     "as this network has neurons n = {0}.".format(self.nrOfNeurons)
+            raise ValueError(errMsg)
+        
+        # initially set all weights to zero
+        self.weights = np.zeros((self.nrOfNeurons, self.nrOfNeurons))
+
+        # Storkey rule formula to compute the weights
+        for p in pattern_list:
+            p_flat = p.flatten()
+            # calculate "local fields" of all N neurons
+            local_fields = np.sum(np.multiply(self.weights, p_flat), axis=1)
+            # apply Storkey update rule
+            self.weights += (1.0 / self.nrOfNeurons) * (np.outer(p_flat, p_flat) - np.outer(p_flat, local_fields) - np.outer(local_fields, p_flat))
+            # for i in range(self.nrOfNeurons):
+                # for k in range(self.nrOfNeurons):
+                    # apply Storkey update rule
+                    # self.weights[i, k] += (1.0 / self.nrOfNeurons) * (p_flat[i] * p_flat[k] - p_flat[i] * local_fields[k] - p_flat[k] * local_fields[i])
+                    
+        # if the connectivity is "random", randomly choose (by chosen percentage) edges to zero out
+        if self.connectivity == 'random':
+            for i in range(self.nrOfNeurons):
+                for k in range(self.nrOfNeurons):
+                    # if the (i, k) pair of neurons aren't part of the lattice connectivity
+                    if not self.is_lattice_connection(i, k):
+                        # and if a random coin flip is greater than 1.0 - percent_connect
+                        if random.random() < 1.0 - self.percent_connect:
+                            # set the edge weight to 0 (never updates; corresponds to no edge)
+                            self.weights[i, k] = 0.0
+        
+        # if the connectivity is "lattice", zero out all but lattice edges
+        elif self.connectivity == 'lattice':            
+            for i in range(self.nrOfNeurons):
+                for k in range(self.nrOfNeurons):
+                    # if the (i, k) pair of neurons aren't part of the lattice connectivity
+                    if not self.is_lattice_connection(i, k):
+                        # set the edge weight to 0 (never updates; corresponds to no edge)
+                        self.weights[i, k] = 0.0
         
         # no self connections
         np.fill_diagonal(self.weights, 0)
@@ -267,7 +325,7 @@ def _get_tanh_update_function(beta):
         return s1
     return upd
     
-def _get_async_anh_update_function(beta):
+def _get_async_tanh_update_function(beta):
     """
     Gives the asynchronous tanh update function.
     
@@ -297,4 +355,3 @@ def _get_async_anh_update_function(beta):
             s1 = -1
         return s1
     return upd
-
